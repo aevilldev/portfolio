@@ -60,7 +60,7 @@ export default function ParticleField({ onReady }: Props) {
       colors[i * 3 + 1] = c.g * shade;
       colors[i * 3 + 2] = c.b * shade;
 
-      sizes[i] = Math.random() < 0.06 ? 0.28 : 0.05 + Math.random() * 0.1;
+      sizes[i] = Math.random() < 0.07 ? 0.5 : 0.12 + Math.random() * 0.16;
       seeds[i] = Math.random() * Math.PI * 2;
     }
 
@@ -89,7 +89,7 @@ export default function ParticleField({ onReady }: Props) {
           p.x += cos(uTime * 0.18 + aSeed * 1.7) * 0.6;
           vec4 mv = modelViewMatrix * vec4(p, 1.0);
           float dist = -mv.z;
-          vFade = smoothstep(70.0, 8.0, dist) * (0.55 + 0.45 * sin(uTime * 0.9 + aSeed));
+          vFade = smoothstep(95.0, 4.0, dist) * (0.75 + 0.25 * sin(uTime * 0.9 + aSeed));
           gl_PointSize = aSize * 300.0 * uPixelRatio / max(dist, 0.001);
           gl_Position = projectionMatrix * mv;
         }
@@ -152,7 +152,8 @@ export default function ParticleField({ onReady }: Props) {
     onScroll();
 
     // ---- loop ------------------------------------------------------------
-    const clock = new THREE.Clock();
+    let last = performance.now();
+    let elapsed = 0;
     let raf = 0;
     let visible = true;
     const onVisibility = () => {
@@ -166,8 +167,11 @@ export default function ParticleField({ onReady }: Props) {
     const tick = () => {
       raf = requestAnimationFrame(tick);
       if (!visible) return;
-      const dt = Math.min(clock.getDelta(), 0.05);
-      const t = clock.elapsedTime;
+      const now = performance.now();
+      const dt = Math.min((now - last) / 1000, 0.05);
+      last = now;
+      elapsed += dt;
+      const t = elapsed;
 
       pointer.x = damp(pointer.x, target.x, 2.2, dt);
       pointer.y = damp(pointer.y, target.y, 2.2, dt);
