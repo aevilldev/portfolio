@@ -200,6 +200,64 @@ export default function ParticleField({ onReady }: Props) {
     }
     world.add(ringGroup);
 
+    // ---- planets ---------------------------------------------------------
+    scene.add(new THREE.AmbientLight(0x88bbff, 0.6));
+    const sun = new THREE.PointLight(0xbfe6ff, 1200, 300);
+    sun.position.set(40, 30, 20);
+    scene.add(sun);
+
+    const planetGroup = new THREE.Group();
+    world.add(planetGroup);
+    const planets: { grp: THREE.Group; orbit: number; speed: number; rad: number; spin: number; y: number }[] = [];
+    const planetDefs = [
+      { r: 6, c: 0x2f6d9a, ring: true },
+      { r: 3.4, c: 0x8f5bd8, ring: false },
+      { r: 9, c: 0x1d3a55, ring: true },
+      { r: 2.2, c: 0xc78b5c, ring: false },
+    ];
+    const planetCount = isSmall ? 2 : planetDefs.length;
+    for (let i = 0; i < planetCount; i++) {
+      const d = planetDefs[i]!;
+      const grp = new THREE.Group();
+      grp.add(
+        new THREE.Mesh(
+          new THREE.SphereGeometry(d.r, 40, 40),
+          new THREE.MeshStandardMaterial({
+            color: d.c,
+            roughness: 0.9,
+            metalness: 0.08,
+            emissive: new THREE.Color(d.c).multiplyScalar(0.18),
+          }),
+        ),
+      );
+      grp.add(
+        new THREE.Mesh(
+          new THREE.SphereGeometry(d.r * 1.02, 20, 14),
+          new THREE.MeshBasicMaterial({ color: 0x7fd3ff, wireframe: true, transparent: true, opacity: 0.16 }),
+        ),
+      );
+      if (d.ring) {
+        const ring = new THREE.Mesh(
+          new THREE.TorusGeometry(d.r * 1.8, d.r * 0.045, 8, 120),
+          new THREE.MeshBasicMaterial({ color: 0x9fd8ff, transparent: true, opacity: 0.35 }),
+        );
+        ring.rotation.x = Math.PI / 2.3;
+        grp.add(ring);
+      }
+      const rad = 26 + i * 12 + Math.random() * 6;
+      const y = (Math.random() - 0.5) * 22;
+      grp.position.set(rad, y, -40 - i * 18);
+      planetGroup.add(grp);
+      planets.push({
+        grp,
+        orbit: Math.random() * Math.PI * 2,
+        speed: 0.03 + Math.random() * 0.05,
+        rad,
+        spin: 0.05 + Math.random() * 0.12,
+        y,
+      });
+    }
+
     // ---- interaction ---------------------------------------------------
     const pointer = { x: 0, y: 0 };
     const target = { x: 0, y: 0 };
@@ -263,6 +321,15 @@ export default function ParticleField({ onReady }: Props) {
       stars.rotation.y += dt * 0.004;
       stars.position.z = scrollN * 40;
 
+      for (const pl of planets) {
+        pl.orbit += pl.speed * dt;
+        pl.grp.rotation.y += pl.spin * dt;
+        pl.grp.position.x = Math.cos(pl.orbit) * pl.rad;
+        pl.grp.position.z = Math.sin(pl.orbit) * pl.rad - 40;
+        pl.grp.position.y = pl.y + Math.sin(t * 0.25 + pl.orbit) * 2.2;
+      }
+      planetGroup.rotation.y = pointer.x * 0.12;
+
       for (const s of solids) {
         s.mesh.rotation.x += s.spin.x * dt;
         s.mesh.rotation.y += s.spin.y * dt;
@@ -310,6 +377,13 @@ export default function ParticleField({ onReady }: Props) {
         const m = c as THREE.Mesh;
         m.geometry.dispose();
         (m.material as THREE.Material).dispose();
+      });
+      planetGroup.traverse((o) => {
+        const mesh = o as THREE.Mesh;
+        if (mesh.isMesh) {
+          mesh.geometry.dispose();
+          (mesh.material as THREE.Material).dispose();
+        }
       });
       renderer.dispose();
       if (renderer.domElement.parentNode === host) host.removeChild(renderer.domElement);

@@ -4,23 +4,24 @@ import { Suspense, lazy, useCallback, useEffect, useState } from "react";
 import Intro from "@/components/Intro";
 import Reveal from "@/components/Reveal";
 import Tilt3D from "@/components/Tilt3D";
+import InfoWindow from "@/components/InfoWindow";
 
 const ParticleField = lazy(() => import("@/components/ParticleField"));
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "aevill — developer, designer, server owner" },
+      { title: "aevill — developer, designer, server operator" },
       {
         name: "description",
         content:
-          "aevill: full-stack developer, graphic designer and Minecraft server operator. Rank 957 on mcpvp.com. Selling tankskill.xyz and balkantiers.xyz.",
+          "aevill: full-stack developer, graphic designer and Minecraft server operator. Currently manager of Synergy FFA. Selling tankskill.xyz and balkantiers.xyz with their full website concepts.",
       },
-      { property: "og:title", content: "aevill — developer, designer, server owner" },
+      { property: "og:title", content: "aevill — developer, designer, server operator" },
       {
         property: "og:description",
         content:
-          "Development, design and Minecraft network operations. Staff on NovaTiers and Synergy FFA. Contact on Discord or Gmail.",
+          "Development, design and Minecraft network operations. Currently manager of Synergy FFA. Contact on Discord or Gmail.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -29,62 +30,69 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-const SKILLS = [
+type Skill = { name: string; desc: string };
+
+const SKILLS: { head: string; items: Skill[] }[] = [
   {
     head: "Development",
     items: [
-      "Java",
-      "JavaScript",
-      "TypeScript",
-      "HTML",
-      "CSS",
-      "React",
-      "Next.js",
-      "Node.js",
-      "Python",
-      "Git / GitHub",
-      "APIs",
-      "Databases",
-      "Web development",
+      { name: "Java", desc: "Minecraft plugin and server-side development — custom gamemodes, anti-cheat hooks, permissions logic and performance-critical event handling." },
+      { name: "JavaScript", desc: "The language I reach for most. Everything from small browser interactions to full app logic and automation scripts." },
+      { name: "TypeScript", desc: "Typed JavaScript for anything that has to survive longer than a weekend — safer refactors, cleaner APIs, fewer runtime surprises." },
+      { name: "HTML", desc: "Semantic, accessible markup as the base layer of every site I build. Structure first, styling after." },
+      { name: "CSS", desc: "Layout, motion and design systems. Grid, flex, custom properties, transitions — most of the 'feel' of a site lives here." },
+      { name: "React", desc: "Component architecture, state, hooks and reactive interfaces — the framework behind most of the front-ends I ship." },
+      { name: "Next.js", desc: "Routing, server rendering and deployment for production React sites that need to be fast and indexable." },
+      { name: "Node.js", desc: "Backends, bots, tooling and API layers. Discord bots, webhook handlers and glue services between game servers and websites." },
+      { name: "Python", desc: "Scripting, automation and data wrangling — quick tools that save hours of manual work." },
+      { name: "Git / GitHub", desc: "Version control, branching, pull requests and releases. Everything I build lives in a repo." },
+      { name: "APIs", desc: "Designing and consuming REST endpoints, auth flows, rate limits and integrations between services." },
+      { name: "Databases", desc: "Schema design, queries and data modelling for player stats, shops, punishments and site content." },
+      { name: "Web development", desc: "End to end: concept, design, build, deploy. I can take a site from a blank page to a live domain on my own." },
     ],
   },
   {
     head: "Infrastructure",
     items: [
-      "Hosting",
-      "Cloudflare",
-      "DNS",
-      "Server optimization",
-      "Permissions",
-      "Anti-cheat",
-      "Server security",
+      { name: "Hosting", desc: "Provisioning and running game and web hosting — picking the right box, deploying, monitoring and keeping uptime respectable." },
+      { name: "Cloudflare", desc: "Proxying, caching, WAF rules, page rules and DDoS mitigation in front of both websites and Minecraft networks." },
+      { name: "DNS", desc: "Records, SRV setup for Minecraft, subdomains, propagation and domain migrations without downtime." },
+      { name: "Server optimization", desc: "Timings analysis, tick-rate debugging, plugin auditing and config tuning to keep TPS at 20 under real player load." },
+      { name: "Permissions", desc: "Rank trees, inheritance, staff scopes and per-world permission setups that don't accidentally hand out admin." },
+      { name: "Anti-cheat", desc: "Configuring and tuning anti-cheat, tightening checks against false positives, and reviewing flagged clips." },
+      { name: "Server security", desc: "Hardening access, protecting against exploits and leaks, backup strategy and locking down staff privileges." },
     ],
   },
   {
     head: "Design & Media",
     items: [
-      "Graphic design",
-      "UI design",
-      "Video editing",
-      "Motion graphics",
-      "After Effects",
-      "Premiere Pro",
-      "Photoshop",
-      "Thumbnails",
-      "Resource-pack design",
-      "Branding",
+      { name: "Graphic design", desc: "Logos, banners, store graphics and full visual identities — mostly for gaming communities and servers." },
+      { name: "UI design", desc: "Interface layout, type scale, spacing and interaction design before a single line of front-end code exists." },
+      { name: "Video editing", desc: "Cutting montages, trailers and short-form content with pacing that actually holds attention." },
+      { name: "Motion graphics", desc: "Animated intros, lower thirds, transitions and kinetic type for trailers and social content." },
+      { name: "After Effects", desc: "My main motion tool — compositing, keyframing, effects and render pipelines." },
+      { name: "Premiere Pro", desc: "Timeline editing, colour, audio balancing and export presets for YouTube and TikTok." },
+      { name: "Photoshop", desc: "Compositing, retouching and every static graphic from thumbnails to full store layouts." },
+      { name: "Thumbnails", desc: "Click-driven thumbnail design — readable at small sizes, high contrast, clear subject." },
+      { name: "Resource-pack design", desc: "Custom Minecraft textures, GUIs, fonts and item models to give a server its own look." },
+      { name: "Branding", desc: "Naming, palette, typography and the whole consistent look across a server, site and socials." },
     ],
   },
 ];
 
 const SELLING = [
-  { name: "tankskill.xyz", note: "Domain — available now" },
-  { name: "balkantiers.xyz", note: "Domain — available now" },
-];
-
-const ROLES = [
-  { role: "Moderator", org: "NovaTiers", when: "Current" },
-  { role: "Manager", org: "Synergy FFA", when: "Current" },
+  {
+    name: "tankskill.xyz",
+    href: "https://tankskill.xyz",
+    note: "Domain + full website concept",
+    body: "The domain and the entire website concept built on it. Heads up: the site does not currently work as intended — parts of it are unfinished or broken and will need fixing by whoever picks it up.",
+  },
+  {
+    name: "balkantiers.xyz",
+    href: "https://balkantiers.xyz",
+    note: "Domain + full website concept",
+    body: "Sold as the domain plus the whole concept and build sitting on it. Same disclaimer: it does not currently function as intended and will need work before it's production-ready.",
+  },
 ];
 
 const HISTORY = [
@@ -112,14 +120,15 @@ const HISTORY = [
 ];
 
 const LINKS = [
-  { label: "YouTube", handle: "@AEvilIsHere", href: "https://www.youtube.com/@AEvilIsHere" },
-  { label: "TikTok", handle: "@aevilltaken", href: "https://www.tiktok.com/@aevilltaken" },
-  { label: "GitHub", handle: "aevilldev", href: "https://github.com/aevilldev" },
-  { label: "Discord", handle: "aevill", href: "https://discord.com/users/aevill" },
+  { label: "YOUTUBE", href: "https://www.youtube.com/@AEvilIsHere" },
+  { label: "TIKTOK", href: "https://www.tiktok.com/@aevilltaken" },
+  { label: "GITHUB", href: "https://github.com/aevilldev" },
+  { label: "DISCORD", href: "https://discord.com/users/aevill" },
 ];
 
 function Index() {
   const [introDone, setIntroDone] = useState(true);
+  const [active, setActive] = useState<{ group: string; skill: Skill } | null>(null);
 
   useEffect(() => {
     if (sessionStorage.getItem("aevill-intro") !== "seen") setIntroDone(false);
@@ -148,6 +157,12 @@ function Index() {
             "radial-gradient(120% 70% at 50% 0%, transparent 35%, color-mix(in oklab, var(--background) 78%, transparent) 100%)",
         }}
       />
+
+      {active && (
+        <InfoWindow kicker={active.group} title={active.skill.name} onClose={() => setActive(null)}>
+          {active.skill.desc}
+        </InfoWindow>
+      )}
 
       <div className="relative z-10">
         <header className="fixed top-0 right-0 left-0 z-20 flex items-center justify-between px-6 py-6 mix-blend-difference md:px-12">
@@ -188,10 +203,24 @@ function Index() {
                 Developer, designer and server operator. I&apos;ve done pretty much everything at
                 one point — code, infrastructure, branding, motion, moderation.
               </p>
-              <div className="flex flex-col gap-2">
-                <span className="label-mono">Current rank · mcpvp.com</span>
-                <span className="text-display text-5xl text-primary md:text-6xl">#957</span>
-              </div>
+              <Tilt3D strength={12} depth={40}>
+                <div
+                  className="border border-primary/50 px-6 py-5"
+                  style={{
+                    background: "color-mix(in oklab, var(--card) 55%, transparent)",
+                    boxShadow: "var(--accent-glow)",
+                  }}
+                >
+                  <span className="label-mono flex items-center gap-2">
+                    <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
+                    Currently
+                  </span>
+                  <p className="text-display mt-3 text-3xl text-primary md:text-4xl">
+                    Manager — Synergy FFA
+                  </p>
+                  <p className="label-mono mt-3">Also moderator · NovaTiers</p>
+                </div>
+              </Tilt3D>
             </div>
           </div>
           <div className="mt-16 flex items-center gap-3">
@@ -213,20 +242,21 @@ function Index() {
               <p className="mt-6 max-w-xl leading-relaxed text-muted-foreground">
                 Started in graphic design, moved into development, then ended up running whole
                 Minecraft networks — hosting, DNS, anti-cheat, permissions, staff teams and every
-                piece of branding attached to them. If a project needs it done, I&apos;ve probably
-                done that part before.
+                piece of branding attached to them. Right now I&apos;m{" "}
+                <span className="text-primary">manager of Synergy FFA</span>, keeping the server,
+                the staff team and the player experience running day to day.
               </p>
             </Reveal>
             <Reveal delay={160} className="md:col-span-3">
               <dl className="space-y-6">
-                {ROLES.map((r) => (
-                  <div key={r.org}>
-                    <dt className="label-mono">{r.when}</dt>
-                    <dd className="mt-2 text-sm">
-                      {r.role} — <span className="text-primary">{r.org}</span>
-                    </dd>
-                  </div>
-                ))}
+                <div>
+                  <dt className="label-mono">Current — main role</dt>
+                  <dd className="text-display mt-2 text-xl text-primary">Manager, Synergy FFA</dd>
+                </div>
+                <div>
+                  <dt className="label-mono">Current</dt>
+                  <dd className="mt-2 text-sm">Moderator — NovaTiers</dd>
+                </div>
                 <div>
                   <dt className="label-mono">Contact via</dt>
                   <dd className="mt-2 text-sm">Discord or Gmail</dd>
@@ -239,7 +269,7 @@ function Index() {
         {/* SKILLS */}
         <section className="hairline-t px-6 py-28 md:px-12" id="skills">
           <Reveal>
-            <span className="label-mono">What I do</span>
+            <span className="label-mono">What I do — click anything</span>
           </Reveal>
           <div className="mt-12 grid gap-12 md:grid-cols-3">
             {SKILLS.map((d, i) => (
@@ -248,11 +278,14 @@ function Index() {
                   <h3 className="text-display text-2xl">{d.head}</h3>
                   <ul className="mt-5 flex flex-wrap gap-2">
                     {d.items.map((it) => (
-                      <li
-                        key={it}
-                        className="rounded-sm border border-hairline px-2.5 py-1 text-sm text-muted-foreground transition-colors duration-300 hover:border-primary hover:text-primary"
-                      >
-                        {it}
+                      <li key={it.name}>
+                        <button
+                          type="button"
+                          onClick={() => setActive({ group: d.head, skill: it })}
+                          className="rounded-sm border border-hairline px-2.5 py-1 text-sm text-muted-foreground transition-all duration-300 hover:-translate-y-0.5 hover:border-primary hover:text-primary hover:shadow-[var(--accent-glow)]"
+                        >
+                          {it.name}
+                        </button>
                       </li>
                     ))}
                   </ul>
@@ -265,23 +298,43 @@ function Index() {
         {/* SELLING */}
         <section className="hairline-t px-6 py-28 md:px-12" id="selling">
           <Reveal>
-            <span className="label-mono">Currently selling</span>
+            <span className="label-mono">Currently selling — domain + website concept</span>
+            <p className="mt-4 max-w-2xl text-sm text-muted-foreground">
+              These are sold as the domain <em>and</em> the entire website concept built on it. Both
+              sites currently{" "}
+              <span className="text-primary">do not work as intended and will need fixing</span> —
+              you&apos;re buying the name and the concept, not a finished product.
+            </p>
           </Reveal>
           <div className="mt-12 grid gap-6 md:grid-cols-2">
             {SELLING.map((s, i) => (
               <Reveal key={s.name} delay={i * 90}>
-                <Tilt3D strength={7} depth={22}>
+                <Tilt3D strength={9} depth={30}>
                   <div className="group relative overflow-hidden border border-hairline p-8 transition-colors duration-500 hover:border-primary">
                     <span className="label-mono">{s.note}</span>
                     <p className="text-display mt-6 text-3xl transition-colors duration-500 group-hover:text-primary md:text-4xl">
                       {s.name}
                     </p>
-                    <a
-                      href="mailto:aevillcontact@gmail.com?subject=Domain%20enquiry"
-                      className="label-mono link-underline mt-8 inline-block text-foreground"
-                    >
-                      Enquire
-                    </a>
+                    <p className="mt-5 text-sm leading-relaxed text-muted-foreground">{s.body}</p>
+                    <p className="label-mono mt-5 text-destructive">
+                      ⚠ Not fully functional — needs fixing
+                    </p>
+                    <div className="mt-8 flex flex-wrap gap-6">
+                      <a
+                        href={s.href}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="label-mono link-underline text-primary"
+                      >
+                        Open website ↗
+                      </a>
+                      <a
+                        href={`mailto:aevillcontact@gmail.com?subject=${encodeURIComponent(`Enquiry — ${s.name}`)}`}
+                        className="label-mono link-underline text-foreground"
+                      >
+                        Enquire
+                      </a>
+                    </div>
                   </div>
                 </Tilt3D>
               </Reveal>
@@ -321,16 +374,16 @@ function Index() {
           </Reveal>
           <Reveal delay={120}>
             <div className="hairline-t mt-20 flex flex-wrap items-center justify-between gap-6 pt-6">
-              <div className="flex flex-wrap gap-6">
+              <div className="flex flex-wrap gap-8">
                 {LINKS.map((s) => (
                   <a
                     key={s.label}
                     href={s.href}
                     target="_blank"
                     rel="noreferrer"
-                    className="label-mono link-underline"
+                    className="label-mono link-underline inline-block transition-all duration-300 hover:-translate-y-0.5 hover:text-primary"
                   >
-                    {s.label} · {s.handle}
+                    {s.label}
                   </a>
                 ))}
               </div>
