@@ -378,6 +378,13 @@ export default function ParticleField({ onReady }: Props) {
         m.geometry.dispose();
         (m.material as THREE.Material).dispose();
       });
+      planetGroup.traverse((o) => {
+        const mesh = o as THREE.Mesh;
+        if (mesh.isMesh) {
+          mesh.geometry.dispose();
+          (mesh.material as THREE.Material).dispose();
+        }
+      });
       renderer.dispose();
       if (renderer.domElement.parentNode === host) host.removeChild(renderer.domElement);
     };
