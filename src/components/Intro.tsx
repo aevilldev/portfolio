@@ -10,34 +10,40 @@ export default function Intro({ onDone }: { onDone: () => void }) {
   useEffect(() => {
     let raf = 0;
     const start = performance.now();
-    const DURATION = 2600;
+    const DURATION = 5200;
 
     const step = (now: number) => {
       const p = Math.min((now - start) / DURATION, 1);
-      const eased = 1 - Math.pow(1 - p, 3);
+      const eased = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
       setCount(Math.round(eased * 100));
       if (p < 1) {
         raf = requestAnimationFrame(step);
       } else {
         setLeaving(true);
-        window.setTimeout(onDone, 1100);
+        window.setTimeout(onDone, 900);
       }
     };
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
   }, [onDone]);
 
+  // fade the overlay chrome out once the camera locks onto the 3D panel
+  const align = Math.min(1, Math.max(0, (count / 100 - 0.55) / 0.35));
+  const chrome = 1 - align;
+
   return (
     <div
       className="fixed inset-0 z-50 overflow-hidden bg-background"
       style={{
         opacity: leaving ? 0 : 1,
-        transform: leaving ? "scale(1.25)" : "scale(1)",
-        filter: leaving ? "blur(14px)" : "none",
-        transition: "transform 1.1s var(--ease-in-out-quart), opacity 1.1s var(--ease-in-out-quart), filter 1.1s linear",
+        transform: leaving ? "scale(1.6)" : "scale(1)",
+        filter: leaving ? "blur(10px) brightness(1.6)" : "none",
+        transition:
+          "transform 0.9s var(--ease-in-out-quart), opacity 0.9s var(--ease-in-out-quart), filter 0.9s linear",
       }}
     >
       <IntroScene progress={count} />
+
 
       <div
         aria-hidden="true"
