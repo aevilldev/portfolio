@@ -94,7 +94,7 @@ export default function IntroScene({ progress }: { progress: number }) {
     for (let i = 0; i < 46; i++) {
       const mat = new THREE.SpriteMaterial({
         map: nebTex,
-        color: nebColors[i % nebColors.length],
+        color: nebColors[i % nebColors.length]!,
         transparent: true,
         opacity: 0.16 + Math.random() * 0.18,
         depthWrite: false,
