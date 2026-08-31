@@ -186,7 +186,7 @@ function Index() {
         {/* HERO */}
         <section className="flex min-h-screen flex-col justify-between px-6 pt-32 pb-10 md:px-12">
           <div />
-          <div className="fade-up" style={{ animationDelay: introDone ? "0ms" : "900ms" }}>
+          <div>
             <Tilt3D strength={9} depth={30}>
               <h1
                 className="text-display text-[22vw] leading-[0.82] md:text-[16vw]"
