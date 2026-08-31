@@ -60,34 +60,8 @@ export default function Intro({ onDone }: { onDone: () => void }) {
           <span className="label-mono">{String(count).padStart(3, "0")}</span>
         </div>
 
-        <div className="flex items-end justify-center overflow-hidden" style={{ perspective: "900px" }}>
-          <h1
-            className="text-display flex text-[18vw] leading-none md:text-[13vw]"
-            style={{
-              transformStyle: "preserve-3d",
-              transform: `rotateX(${(1 - count / 100) * 26}deg) translateZ(${(count / 100) * 60 - 60}px)`,
-              transition: "transform 0.4s linear",
-              textShadow: "0 0 80px color-mix(in oklab, var(--primary) 45%, transparent)",
-            }}
-          >
-            {NAME.map((ch, i) => (
-              <span
-                key={i}
-                className="inline-block"
-                style={{
-                  transform:
-                    count > (i + 1) * 8
-                      ? "translateY(0) rotateY(0deg)"
-                      : "translateY(115%) rotateY(70deg)",
-                  opacity: count > (i + 1) * 8 ? 1 : 0,
-                  transition: "transform 0.9s var(--ease-out-quint), opacity 0.6s linear",
-                }}
-              >
-                {ch}
-              </span>
-            ))}
-          </h1>
-        </div>
+        <div />
+
 
         <div>
           <div className="h-px w-full bg-hairline">
