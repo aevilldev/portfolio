@@ -1,10 +1,112 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 
+const BG = "#0d0f14";
+const FG = "#f2f3f5";
+const MUTED = "#9b9ea6";
+const PRIMARY = "#5ec7ee";
+const CARD = "rgba(20,22,28,0.55)";
+
+/**
+ * Draws a 1:1 proportional replica of the site's hero section so the 3D panel
+ * the camera flies into shows the real website, not a placeholder.
+ */
+function drawHero(ctx: CanvasRenderingContext2D, W: number, H: number) {
+  const k = W / Math.max(window.innerWidth, 1); // css px -> texture px
+  const vw = W / 100;
+  const px = (n: number) => n * k;
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = BG;
+  ctx.fillRect(0, 0, W, H);
+
+  const padX = px(48);
+
+  // ---- header ----
+  ctx.textBaseline = "alphabetic";
+  ctx.fillStyle = FG;
+  ctx.font = `700 ${px(18)}px "Space Grotesk", sans-serif`;
+  ctx.fillText("aevill", padX, px(46));
+
+  ctx.font = `500 ${px(11)}px "JetBrains Mono", monospace`;
+  ctx.fillStyle = "rgba(242,243,245,0.8)";
+  const nav = ["Skills", "Selling", "History", "Contact"];
+  let nx = W - padX;
+  for (let i = nav.length - 1; i >= 0; i--) {
+    const label = nav[i]!.toUpperCase();
+    const wdt = ctx.measureText(label).width;
+    nx -= wdt;
+    ctx.fillText(label, nx, px(46));
+    nx -= px(24);
+  }
+
+  // ---- wordmark ----
+  const heroSize = 16 * vw;
+  ctx.font = `700 ${heroSize}px "Space Grotesk", sans-serif`;
+  ctx.fillStyle = FG;
+  ctx.shadowColor = "rgba(94,199,238,0.35)";
+  ctx.shadowBlur = px(60);
+  const wordBaseline = H * 0.62;
+  ctx.fillText("aevill", padX, wordBaseline);
+  ctx.shadowBlur = 0;
+
+  // ---- intro copy ----
+  ctx.font = `400 ${px(20)}px "Inter Tight", sans-serif`;
+  ctx.fillStyle = MUTED;
+  const copy = [
+    "Developer, designer and server operator. I've done pretty",
+    "much everything at one point — code, infrastructure,",
+    "branding, motion, moderation.",
+  ];
+  copy.forEach((line, i) => ctx.fillText(line, padX, wordBaseline + px(56) + i * px(26)));
+
+  // ---- "Currently" card ----
+  const cardW = px(360);
+  const cardH = px(150);
+  const cardX = W - padX - cardW;
+  const cardY = wordBaseline + px(30);
+  ctx.fillStyle = CARD;
+  ctx.fillRect(cardX, cardY, cardW, cardH);
+  ctx.strokeStyle = "rgba(94,199,238,0.5)";
+  ctx.lineWidth = Math.max(1, px(1));
+  ctx.strokeRect(cardX, cardY, cardW, cardH);
+
+  ctx.fillStyle = PRIMARY;
+  ctx.beginPath();
+  ctx.arc(cardX + px(24) + px(3), cardY + px(34), px(3), 0, Math.PI * 2);
+  ctx.fill();
+  ctx.font = `500 ${px(11)}px "JetBrains Mono", monospace`;
+  ctx.fillStyle = MUTED;
+  ctx.fillText("CURRENTLY", cardX + px(38), cardY + px(38));
+
+  ctx.font = `700 ${px(34)}px "Space Grotesk", sans-serif`;
+  ctx.fillStyle = PRIMARY;
+  ctx.fillText("Manager — Synergy FFA", cardX + px(24), cardY + px(90));
+
+  ctx.font = `500 ${px(11)}px "JetBrains Mono", monospace`;
+  ctx.fillStyle = MUTED;
+  ctx.fillText("ALSO MODERATOR · NOVATIERS", cardX + px(24), cardY + px(122));
+
+  // ---- scroll row ----
+  ctx.font = `500 ${px(11)}px "JetBrains Mono", monospace`;
+  ctx.fillStyle = MUTED;
+  ctx.fillText("SCROLL", padX, H - px(40));
+  ctx.fillStyle = PRIMARY;
+  ctx.fillRect(padX + px(70), H - px(44), px(64), Math.max(1, px(1)));
+
+  // vignette matching the live page
+  const grd = ctx.createRadialGradient(W / 2, 0, 0, W / 2, 0, Math.max(W, H) * 1.1);
+  grd.addColorStop(0.35, "rgba(0,0,0,0)");
+  grd.addColorStop(1, "rgba(13,15,20,0.78)");
+  ctx.fillStyle = grd;
+  ctx.fillRect(0, 0, W, H);
+}
+
 /**
  * Cinematic flythrough: the camera travels through a deep-space corridor of
  * stars, nebulae, asteroids and planets, then locks onto a floating holographic
- * panel (the "website") and flies straight into it.
+ * panel showing the real site and flies straight into it, ending perfectly
+ * aligned so the panel fills the frame exactly like the live page.
  */
 export default function IntroScene({ progress }: { progress: number }) {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -28,9 +130,10 @@ export default function IntroScene({ progress }: { progress: number }) {
     renderer.setClearColor(0x000000, 0);
     host.appendChild(renderer.domElement);
 
+    const FOV_END = 62;
     const scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0x04060c, 0.0055);
-    const camera = new THREE.PerspectiveCamera(72, w() / h(), 0.1, 1200);
+    const camera = new THREE.PerspectiveCamera(FOV_END, w() / h(), 0.1, 1200);
 
     scene.add(new THREE.AmbientLight(0x88bbff, 0.55));
     const key = new THREE.PointLight(0xaee3ff, 2200, 900);
@@ -43,6 +146,7 @@ export default function IntroScene({ progress }: { progress: number }) {
     const disposables: { dispose(): void }[] = [];
     const START_Z = 40;
     const PANEL_Z = -560;
+    const PH = 40; // panel height in world units (width follows viewport aspect)
 
     /* ---------------- soft radial sprite texture ---------------- */
     const makeGlow = (inner: string, outer: string) => {
@@ -137,13 +241,11 @@ export default function IntroScene({ progress }: { progress: number }) {
     for (let i = 0; i < 90; i++) {
       const g = rockGeos[i % rockGeos.length]!;
       const grp = new THREE.Group();
-      const mesh = new THREE.Mesh(g, rockMat);
-      grp.add(mesh);
+      grp.add(new THREE.Mesh(g, rockMat));
       grp.add(new THREE.Mesh(g, rockEdge));
       const a = Math.random() * Math.PI * 2;
       const r = 16 + Math.random() * 90;
-      const s = 0.8 + Math.random() * 5;
-      grp.scale.setScalar(s);
+      grp.scale.setScalar(0.8 + Math.random() * 5);
       grp.position.set(Math.cos(a) * r, Math.sin(a) * r * 0.8, START_Z - 40 - Math.random() * 820);
       scene.add(grp);
       rocks.push({ o: grp, rx: (Math.random() - 0.5) * 0.7, ry: (Math.random() - 0.5) * 0.7 });
@@ -197,13 +299,35 @@ export default function IntroScene({ progress }: { progress: number }) {
       planets.push({ grp, spin: 0.05 + Math.random() * 0.1 });
     }
 
-    /* ---------------- the website panel ---------------- */
+    /* ---------------- the website panel (1:1 hero replica) ---------------- */
+    const heroCanvas = document.createElement("canvas");
+    const heroCtx = heroCanvas.getContext("2d")!;
+    const heroTex = new THREE.CanvasTexture(heroCanvas);
+    heroTex.colorSpace = THREE.SRGBColorSpace;
+    heroTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    disposables.push(heroTex);
+
+    const renderHero = () => {
+      const dpr = Math.min(window.devicePixelRatio, 2);
+      heroCanvas.width = Math.round(w() * dpr);
+      heroCanvas.height = Math.round(h() * dpr);
+      drawHero(heroCtx, heroCanvas.width, heroCanvas.height);
+      heroTex.needsUpdate = true;
+    };
+    renderHero();
+    if (document.fonts?.ready) document.fonts.ready.then(renderHero).catch(() => {});
+
     const panel = new THREE.Group();
     panel.position.set(18, 6, PANEL_Z);
-    const PW = 64;
-    const PH = 40;
 
-    const slabGeo = new THREE.BoxGeometry(PW, PH, 1.6);
+    const faceGeo = new THREE.PlaneGeometry(1, 1);
+    const faceMat = new THREE.MeshBasicMaterial({ map: heroTex, toneMapped: false, transparent: true });
+    const face = new THREE.Mesh(faceGeo, faceMat);
+    face.position.z = 0.9;
+    panel.add(face);
+    disposables.push(faceGeo, faceMat);
+
+    const slabGeo = new THREE.BoxGeometry(1, 1, 1);
     const slabMat = new THREE.MeshStandardMaterial({
       color: 0x0a1220,
       roughness: 0.25,
@@ -212,59 +336,52 @@ export default function IntroScene({ progress }: { progress: number }) {
       transparent: true,
       opacity: 0.92,
     });
-    panel.add(new THREE.Mesh(slabGeo, slabMat));
+    const slab = new THREE.Mesh(slabGeo, slabMat);
+    panel.add(slab);
     disposables.push(slabGeo, slabMat);
 
-    const frameGeo = new THREE.BoxGeometry(PW + 1.6, PH + 1.6, 2.2);
+    const frameGeo = new THREE.BoxGeometry(1, 1, 1);
     const frameMat = new THREE.MeshBasicMaterial({ color: 0x7fe3ff, wireframe: true, transparent: true, opacity: 0.55 });
-    panel.add(new THREE.Mesh(frameGeo, frameMat));
+    const frame = new THREE.Mesh(frameGeo, frameMat);
+    panel.add(frame);
     disposables.push(frameGeo, frameMat);
 
-    const glowGeo = new THREE.PlaneGeometry(PW * 1.9, PH * 2.1);
-    const glowMat = new THREE.SpriteMaterial({ map: nebTex, color: 0x6fd6ff, transparent: true, opacity: 0.35, depthWrite: false, blending: THREE.AdditiveBlending });
+    const glowMat = new THREE.SpriteMaterial({
+      map: nebTex,
+      color: 0x6fd6ff,
+      transparent: true,
+      opacity: 0.35,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
     const halo = new THREE.Sprite(glowMat);
-    halo.scale.set(PW * 2.4, PH * 2.6, 1);
     halo.position.z = -3;
     panel.add(halo);
-    disposables.push(glowGeo, glowMat);
+    disposables.push(glowMat);
 
-    // fake UI blocks on the panel face
-    const uiMat = new THREE.MeshBasicMaterial({ color: 0x9fe8ff, transparent: true, opacity: 0.5 });
-    const uiDim = new THREE.MeshBasicMaterial({ color: 0x4c86a8, transparent: true, opacity: 0.35 });
-    disposables.push(uiMat, uiDim);
-    const addBlock = (x: number, y: number, bw: number, bh: number, bright = false) => {
-      const g = new THREE.PlaneGeometry(bw, bh);
-      disposables.push(g);
-      const mesh = new THREE.Mesh(g, bright ? uiMat : uiDim);
-      mesh.position.set(x, y, 0.95);
-      panel.add(mesh);
+    let PW = PH * (w() / h());
+    const layoutPanel = () => {
+      PW = PH * (w() / h());
+      face.scale.set(PW, PH, 1);
+      slab.scale.set(PW, PH, 1.6);
+      frame.scale.set(PW + 1.6, PH + 1.6, 2.2);
+      halo.scale.set(PW * 2.2, PH * 2.6, 1);
     };
-    addBlock(-PW / 2 + 14, PH / 2 - 4, 22, 2.2, true); // nav
-    addBlock(PW / 2 - 10, PH / 2 - 4, 14, 1.4);
-    addBlock(-PW / 2 + 22, PH / 2 - 13, 38, 6.5, true); // headline
-    addBlock(-PW / 2 + 16, PH / 2 - 21, 26, 2.4);
-    for (let i = 0; i < 3; i++) addBlock(-PW / 2 + 12 + i * 20, -PH / 2 + 10, 16, 9);
-    addBlock(0, -PH / 2 + 2.5, PW - 8, 0.4, true);
-
-    const gridGeo = new THREE.PlaneGeometry(PW - 2, PH - 2, 18, 12);
-    const gridMat = new THREE.MeshBasicMaterial({ color: 0x2ec5d3, wireframe: true, transparent: true, opacity: 0.14 });
-    const grid = new THREE.Mesh(gridGeo, gridMat);
-    grid.position.z = 0.9;
-    panel.add(grid);
-    disposables.push(gridGeo, gridMat);
+    layoutPanel();
 
     panel.rotation.set(0.22, -0.62, 0.07);
     panel.visible = false;
     scene.add(panel);
 
     const panelLight = new THREE.PointLight(0x7fe3ff, 3000, 400);
-    panelLight.position.set(18, 6, PANEL_Z + 40);
     scene.add(panelLight);
 
     const onResize = () => {
       camera.aspect = w() / h();
       camera.updateProjectionMatrix();
       renderer.setSize(w(), h());
+      layoutPanel();
+      renderHero();
     };
     window.addEventListener("resize", onResize);
 
@@ -283,38 +400,45 @@ export default function IntroScene({ progress }: { progress: number }) {
       t += dt;
 
       const p = clamp01(progRef.current / 100);
-
-      // camera travels the corridor, decelerating as it locks onto the panel
-      const travel = easeInOut(p);
-      const camZ = lerp(START_Z, PANEL_Z + 22, travel);
-
-      // alignment phase: 0 while cruising, 1 when locked to the panel
-      const align = clamp01((p - 0.55) / 0.45);
+      const align = clamp01((p - 0.5) / 0.5); // 0 cruising -> 1 locked on
       const ae = easeInOut(align);
-
       const wander = 1 - ae;
-      camera.position.set(
-        lerp(Math.sin(t * 0.35) * 9 + Math.sin(t * 0.13) * 5, 0, ae) * wander + lerp(0, panel.position.x, ae),
-        lerp(Math.cos(t * 0.27) * 6 + Math.sin(t * 0.09) * 4, 0, ae) * wander + lerp(0, panel.position.y, ae),
-        camZ,
-      );
-      camera.rotation.z = Math.sin(t * 0.2) * 0.09 * wander;
-      camera.rotation.y = lerp(Math.sin(t * 0.18) * 0.06, 0, ae) * wander;
-      camera.rotation.x = lerp(Math.cos(t * 0.15) * 0.05, 0, ae) * wander;
-      camera.fov = lerp(86, 62, easeInOut(clamp01(p * 1.15)));
-      camera.updateProjectionMatrix();
 
-      // panel appears in the distance, then squares up to the camera
-      panel.visible = p > 0.18;
+      // panel squares up to the camera
       panel.rotation.x = lerp(0.22, 0, ae);
       panel.rotation.y = lerp(-0.62, 0, ae) + Math.sin(t * 0.5) * 0.02 * wander;
       panel.rotation.z = lerp(0.07, 0, ae) + Math.sin(t * 0.4) * 0.01 * wander;
-      panel.position.x = lerp(18, 0, ae * 0.35);
-      panel.position.y = lerp(6, 0, ae * 0.35) + Math.sin(t * 0.7) * 0.6 * wander;
+      panel.position.x = lerp(18, 0, ae) ;
+      panel.position.y = lerp(6, 0, ae) + Math.sin(t * 0.7) * 0.6 * wander;
+      panel.visible = p > 0.16;
+
+      // fov opens wide for speed, settles at FOV_END so the final frame is exact
+      camera.fov = lerp(88, FOV_END, easeInOut(clamp01(p / 0.85)));
+      camera.updateProjectionMatrix();
+
+      // distance at which the panel exactly fills the viewport
+      const fillDist = PH / 2 / Math.tan(THREE.MathUtils.degToRad(FOV_END) / 2);
+      const endZ = PANEL_Z + 0.9 + fillDist;
+      const camZ = lerp(START_Z, endZ, easeInOut(p));
+
+      camera.position.set(
+        lerp(Math.sin(t * 0.35) * 9 + Math.sin(t * 0.13) * 5, 0, ae) * wander + panel.position.x * ae,
+        lerp(Math.cos(t * 0.27) * 6 + Math.sin(t * 0.09) * 4, 0, ae) * wander + panel.position.y * ae,
+        camZ,
+      );
+      camera.rotation.z = Math.sin(t * 0.2) * 0.09 * wander;
+      camera.rotation.y = Math.sin(t * 0.18) * 0.06 * wander;
+      camera.rotation.x = Math.cos(t * 0.15) * 0.05 * wander;
+
+      // hologram dressing dissolves in the last stretch so only the real UI remains
+      const shed = clamp01((p - 0.86) / 0.14);
+      frameMat.opacity = (0.35 + 0.5 * ae) * (1 - shed);
+      glowMat.opacity = (0.2 + 0.45 * ae) * (1 - shed);
+      slabMat.opacity = 0.92 * (1 - shed);
       panelLight.position.set(panel.position.x, panel.position.y, PANEL_Z + 60);
-      panelLight.intensity = 1200 + 5000 * ae;
-      (frameMat as THREE.MeshBasicMaterial).opacity = 0.35 + 0.5 * ae;
-      (glowMat as THREE.SpriteMaterial).opacity = 0.2 + 0.45 * ae;
+      panelLight.intensity = (1200 + 5000 * ae) * (1 - shed);
+      scene.fog!.color.setHex(0x04060c);
+      (scene.fog as THREE.FogExp2).density = 0.0055 * (1 - shed);
 
       for (const pl of planets) pl.grp.rotation.y += pl.spin * dt;
       for (const r of rocks) {

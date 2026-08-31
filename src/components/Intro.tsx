@@ -20,35 +20,32 @@ export default function Intro({ onDone }: { onDone: () => void }) {
         raf = requestAnimationFrame(step);
       } else {
         setLeaving(true);
-        window.setTimeout(onDone, 900);
+        window.setTimeout(onDone, 620);
       }
     };
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
   }, [onDone]);
 
-  // fade the overlay chrome out once the camera locks onto the 3D panel
-  const align = Math.min(1, Math.max(0, (count / 100 - 0.55) / 0.35));
-  const chrome = 1 - align;
+  // overlay chrome clears out before the camera locks onto the 3D panel, so the
+  // last frames of the intro are the hero replica alone
+  const chrome = 1 - Math.min(1, Math.max(0, (count / 100 - 0.42) / 0.28));
 
   return (
     <div
       className="fixed inset-0 z-50 overflow-hidden bg-background"
       style={{
         opacity: leaving ? 0 : 1,
-        transform: leaving ? "scale(1.6)" : "scale(1)",
-        filter: leaving ? "blur(10px) brightness(1.6)" : "none",
-        transition:
-          "transform 0.9s var(--ease-in-out-quart), opacity 0.9s var(--ease-in-out-quart), filter 0.9s linear",
+        transition: "opacity 0.6s linear",
       }}
     >
       <IntroScene progress={count} />
-
 
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0"
         style={{
+          opacity: chrome,
           background:
             "radial-gradient(90% 60% at 50% 55%, transparent 20%, color-mix(in oklab, var(--background) 85%, transparent) 100%)",
         }}
@@ -56,7 +53,7 @@ export default function Intro({ onDone }: { onDone: () => void }) {
 
       <div
         className="relative flex h-full flex-col justify-between px-6 py-8 md:px-12"
-        style={{ perspective: "1000px" }}
+        style={{ perspective: "1000px", opacity: chrome, pointerEvents: "none" }}
       >
         <div className="flex items-start justify-between">
           <span className="label-mono">aevill — portfolio</span>
@@ -79,10 +76,10 @@ export default function Intro({ onDone }: { onDone: () => void }) {
                 className="inline-block"
                 style={{
                   transform:
-                    count > (i + 1) * 14
+                    count > (i + 1) * 8
                       ? "translateY(0) rotateY(0deg)"
                       : "translateY(115%) rotateY(70deg)",
-                  opacity: count > (i + 1) * 14 ? 1 : 0,
+                  opacity: count > (i + 1) * 8 ? 1 : 0,
                   transition: "transform 0.9s var(--ease-out-quint), opacity 0.6s linear",
                 }}
               >
