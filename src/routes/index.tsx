@@ -290,13 +290,13 @@ function Index() {
         {/* SKILLS */}
         <section className="hairline-t px-6 py-28 md:px-12" id="skills">
           <Reveal>
-            <span className="label-mono">What I do — click anything</span>
+            <ScrambleText className="label-mono" text="What I do — click anything" />
           </Reveal>
           <div className="mt-12 grid gap-12 md:grid-cols-3">
             {SKILLS.map((d, i) => (
               <Reveal key={d.head} delay={i * 90}>
                 <Tilt3D strength={5} depth={14}>
-                  <h3 className="text-display text-2xl">{d.head}</h3>
+                  <ScrambleText as="h3" className="text-display text-2xl" text={d.head} />
                   <ul className="mt-5 flex flex-wrap gap-2">
                     {d.items.map((it) => (
                       <li key={it.name}>
@@ -319,7 +319,7 @@ function Index() {
         {/* SELLING */}
         <section className="hairline-t px-6 py-28 md:px-12" id="selling">
           <Reveal>
-            <span className="label-mono">Currently selling — domain + website concept</span>
+            <ScrambleText className="label-mono" text="Currently selling — domain + website concept" />
             <p className="mt-4 max-w-2xl text-sm text-muted-foreground">
               These are sold as the domain <em>and</em> the entire website concept built on it. Both
               sites currently{" "}
@@ -366,7 +366,7 @@ function Index() {
         {/* HISTORY */}
         <section className="hairline-t px-6 py-28 md:px-12" id="history">
           <Reveal>
-            <span className="label-mono">Used to own / run</span>
+            <ScrambleText className="label-mono" text="Used to own / run" />
           </Reveal>
           <ul className="mt-12">
             {HISTORY.map((p, i) => (
@@ -380,7 +380,7 @@ function Index() {
         {/* CONTACT */}
         <section className="hairline-t px-6 py-28 md:px-12" id="contact">
           <Reveal>
-            <span className="label-mono">Contact — Discord or Gmail</span>
+            <ScrambleText className="label-mono" text="Contact — Discord or Gmail" />
             <Tilt3D strength={6} depth={18}>
               <a
                 href="mailto:aevillcontact@gmail.com"
