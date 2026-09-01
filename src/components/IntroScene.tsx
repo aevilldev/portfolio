@@ -494,6 +494,18 @@ export default function IntroScene({ progress }: { progress: number }) {
       }
       nebulaGroup.rotation.z += dt * 0.01;
 
+      // corridor gates pulse and spin, streaks stretch with speed then fade out
+      const speedFade = 1 - clamp01((p - 0.68) / 0.32);
+      for (let i = 0; i < gates.length; i++) {
+        const g = gates[i]!;
+        g.rotation.z += dt * (0.06 + i * 0.004);
+        const m = g.material as THREE.MeshBasicMaterial;
+        m.opacity = (0.1 + 0.16 * (0.5 + 0.5 * Math.sin(t * 1.6 + i))) * speedFade;
+      }
+      streaks.scale.z = 1 + (1 - Math.abs(0.5 - p) * 2) * 1.6;
+      streakMat.opacity = 0.4 * speedFade;
+
+
       renderer.render(scene, camera);
     };
     tick();
