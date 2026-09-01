@@ -299,7 +299,54 @@ export default function IntroScene({ progress }: { progress: number }) {
       planets.push({ grp, spin: 0.05 + Math.random() * 0.1 });
     }
 
+    /* ---------------- corridor gates + warp streaks ---------------- */
+    const gates: THREE.Mesh[] = [];
+    const gateGeo = new THREE.TorusGeometry(1, 0.012, 6, 128);
+    disposables.push(gateGeo);
+    for (let i = 0; i < 14; i++) {
+      const gm = new THREE.MeshBasicMaterial({
+        color: i % 3 === 0 ? 0x9b8bff : 0x7fe3ff,
+        transparent: true,
+        opacity: 0.22,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      disposables.push(gm);
+      const ring = new THREE.Mesh(gateGeo, gm);
+      const s = 26 + Math.sin(i * 1.7) * 8;
+      ring.scale.setScalar(s);
+      ring.position.set(Math.sin(i * 0.8) * 5, Math.cos(i * 0.6) * 4, START_Z - 30 - i * 45);
+      ring.rotation.z = Math.random() * Math.PI;
+      scene.add(ring);
+      gates.push(ring);
+    }
+
+    const SN = 420;
+    const spd = new Float32Array(SN * 6);
+    for (let i = 0; i < SN; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const r = 8 + Math.pow(Math.random(), 0.7) * 90;
+      const x = Math.cos(a) * r;
+      const y = Math.sin(a) * r * 0.8;
+      const z = START_Z - Math.random() * 880;
+      const len = 6 + Math.random() * 26;
+      spd.set([x, y, z, x, y, z - len], i * 6);
+    }
+    const streakGeo = new THREE.BufferGeometry();
+    streakGeo.setAttribute("position", new THREE.BufferAttribute(spd, 3));
+    const streakMat = new THREE.LineBasicMaterial({
+      color: 0xbfe9ff,
+      transparent: true,
+      opacity: 0.35,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const streaks = new THREE.LineSegments(streakGeo, streakMat);
+    scene.add(streaks);
+    disposables.push(streakGeo, streakMat);
+
     /* ---------------- the website panel (1:1 hero replica) ---------------- */
+
     const heroCanvas = document.createElement("canvas");
     const heroCtx = heroCanvas.getContext("2d")!;
     const heroTex = new THREE.CanvasTexture(heroCanvas);
