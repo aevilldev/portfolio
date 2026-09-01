@@ -129,6 +129,8 @@ const LINKS = [
 function Index() {
   const [introDone, setIntroDone] = useState(true);
   const [active, setActive] = useState<{ group: string; skill: Skill } | null>(null);
+  const [gravity, setGravity] = useState(false);
+  const [taps, setTaps] = useState(0);
 
   useEffect(() => {
     if (sessionStorage.getItem("aevill-intro") !== "seen") setIntroDone(false);
@@ -139,13 +141,26 @@ function Index() {
     setIntroDone(true);
   }, []);
 
+  const tapFooter = useCallback(() => {
+    setTaps((t) => {
+      const n = t + 1;
+      if (n >= 7) {
+        setGravity(true);
+        return 0;
+      }
+      return n;
+    });
+  }, []);
+
   return (
     <div className="relative min-h-screen">
       <ClientOnly fallback={null}>
         <Suspense fallback={null}>
           <ParticleField />
         </Suspense>
+        <Spotlight />
         {!introDone && <Intro onDone={finishIntro} />}
+        {gravity && <GravityMode onExit={() => setGravity(false)} />}
       </ClientOnly>
 
       {/* vignette so type always stays readable over the field */}
@@ -164,7 +179,9 @@ function Index() {
         </InfoWindow>
       )}
 
+      <ScrollVelocity>
       <div className="relative z-10">
+
         <header className="fixed top-0 right-0 left-0 z-20 flex items-center justify-between px-6 py-6 mix-blend-difference md:px-12">
           <span className="text-display text-lg tracking-tight">aevill</span>
           <nav className="hidden gap-6 sm:flex">
