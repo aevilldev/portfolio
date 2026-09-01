@@ -5,6 +5,11 @@ import Intro from "@/components/Intro";
 import Reveal from "@/components/Reveal";
 import Tilt3D from "@/components/Tilt3D";
 import InfoWindow from "@/components/InfoWindow";
+import Spotlight from "@/components/Spotlight";
+import ScrollVelocity from "@/components/ScrollVelocity";
+import ScrambleText from "@/components/ScrambleText";
+import GravityMode from "@/components/GravityMode";
+
 
 const ParticleField = lazy(() => import("@/components/ParticleField"));
 
@@ -129,6 +134,8 @@ const LINKS = [
 function Index() {
   const [introDone, setIntroDone] = useState(true);
   const [active, setActive] = useState<{ group: string; skill: Skill } | null>(null);
+  const [gravity, setGravity] = useState(false);
+  const [taps, setTaps] = useState(0);
 
   useEffect(() => {
     if (sessionStorage.getItem("aevill-intro") !== "seen") setIntroDone(false);
@@ -139,13 +146,26 @@ function Index() {
     setIntroDone(true);
   }, []);
 
+  const tapFooter = useCallback(() => {
+    setTaps((t) => {
+      const n = t + 1;
+      if (n >= 7) {
+        setGravity(true);
+        return 0;
+      }
+      return n;
+    });
+  }, []);
+
   return (
     <div className="relative min-h-screen">
       <ClientOnly fallback={null}>
         <Suspense fallback={null}>
           <ParticleField />
         </Suspense>
+        <Spotlight />
         {!introDone && <Intro onDone={finishIntro} />}
+        {gravity && <GravityMode onExit={() => setGravity(false)} />}
       </ClientOnly>
 
       {/* vignette so type always stays readable over the field */}
@@ -164,23 +184,24 @@ function Index() {
         </InfoWindow>
       )}
 
+      <ScrollVelocity>
       <div className="relative z-10">
+
         <header className="fixed top-0 right-0 left-0 z-20 flex items-center justify-between px-6 py-6 mix-blend-difference md:px-12">
           <span className="text-display text-lg tracking-tight">aevill</span>
           <nav className="hidden gap-6 sm:flex">
-            <a href="#skills" className="label-mono link-underline text-foreground/80">
-              Skills
-            </a>
-            <a href="#selling" className="label-mono link-underline text-foreground/80">
-              Selling
-            </a>
-            <a href="#history" className="label-mono link-underline text-foreground/80">
-              History
-            </a>
-            <a href="#contact" className="label-mono link-underline text-foreground/80">
-              Contact
-            </a>
+            {[
+              ["#skills", "Skills"],
+              ["#selling", "Selling"],
+              ["#history", "History"],
+              ["#contact", "Contact"],
+            ].map(([href, label]) => (
+              <a key={href} href={href} className="label-mono link-underline text-foreground/80">
+                <ScrambleText text={label!} />
+              </a>
+            ))}
           </nav>
+
         </header>
 
         {/* HERO */}
@@ -269,13 +290,13 @@ function Index() {
         {/* SKILLS */}
         <section className="hairline-t px-6 py-28 md:px-12" id="skills">
           <Reveal>
-            <span className="label-mono">What I do — click anything</span>
+            <ScrambleText className="label-mono" text="What I do — click anything" />
           </Reveal>
           <div className="mt-12 grid gap-12 md:grid-cols-3">
             {SKILLS.map((d, i) => (
               <Reveal key={d.head} delay={i * 90}>
                 <Tilt3D strength={5} depth={14}>
-                  <h3 className="text-display text-2xl">{d.head}</h3>
+                  <ScrambleText as="h3" className="text-display text-2xl" text={d.head} />
                   <ul className="mt-5 flex flex-wrap gap-2">
                     {d.items.map((it) => (
                       <li key={it.name}>
@@ -298,7 +319,7 @@ function Index() {
         {/* SELLING */}
         <section className="hairline-t px-6 py-28 md:px-12" id="selling">
           <Reveal>
-            <span className="label-mono">Currently selling — domain + website concept</span>
+            <ScrambleText className="label-mono" text="Currently selling — domain + website concept" />
             <p className="mt-4 max-w-2xl text-sm text-muted-foreground">
               These are sold as the domain <em>and</em> the entire website concept built on it. Both
               sites currently{" "}
@@ -345,7 +366,7 @@ function Index() {
         {/* HISTORY */}
         <section className="hairline-t px-6 py-28 md:px-12" id="history">
           <Reveal>
-            <span className="label-mono">Used to own / run</span>
+            <ScrambleText className="label-mono" text="Used to own / run" />
           </Reveal>
           <ul className="mt-12">
             {HISTORY.map((p, i) => (
@@ -359,7 +380,7 @@ function Index() {
         {/* CONTACT */}
         <section className="hairline-t px-6 py-28 md:px-12" id="contact">
           <Reveal>
-            <span className="label-mono">Contact — Discord or Gmail</span>
+            <ScrambleText className="label-mono" text="Contact — Discord or Gmail" />
             <Tilt3D strength={6} depth={18}>
               <a
                 href="mailto:aevillcontact@gmail.com"
@@ -387,12 +408,22 @@ function Index() {
                   </a>
                 ))}
               </div>
-              <span className="label-mono">© {new Date().getFullYear()} aevill</span>
+              <button
+                type="button"
+                onClick={tapFooter}
+                title="…"
+                className="label-mono cursor-default select-none transition-colors hover:text-primary"
+                data-no-gravity
+              >
+                © {new Date().getFullYear()} aevill
+              </button>
             </div>
           </Reveal>
         </section>
       </div>
+      </ScrollVelocity>
     </div>
+
   );
 }
 
