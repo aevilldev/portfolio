@@ -190,19 +190,18 @@ function Index() {
         <header className="fixed top-0 right-0 left-0 z-20 flex items-center justify-between px-6 py-6 mix-blend-difference md:px-12">
           <span className="text-display text-lg tracking-tight">aevill</span>
           <nav className="hidden gap-6 sm:flex">
-            <a href="#skills" className="label-mono link-underline text-foreground/80">
-              Skills
-            </a>
-            <a href="#selling" className="label-mono link-underline text-foreground/80">
-              Selling
-            </a>
-            <a href="#history" className="label-mono link-underline text-foreground/80">
-              History
-            </a>
-            <a href="#contact" className="label-mono link-underline text-foreground/80">
-              Contact
-            </a>
+            {[
+              ["#skills", "Skills"],
+              ["#selling", "Selling"],
+              ["#history", "History"],
+              ["#contact", "Contact"],
+            ].map(([href, label]) => (
+              <a key={href} href={href} className="label-mono link-underline text-foreground/80">
+                <ScrambleText text={label!} />
+              </a>
+            ))}
           </nav>
+
         </header>
 
         {/* HERO */}
