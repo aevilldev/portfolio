@@ -5,6 +5,11 @@ import Intro from "@/components/Intro";
 import Reveal from "@/components/Reveal";
 import Tilt3D from "@/components/Tilt3D";
 import InfoWindow from "@/components/InfoWindow";
+import Spotlight from "@/components/Spotlight";
+import ScrollVelocity from "@/components/ScrollVelocity";
+import ScrambleText from "@/components/ScrambleText";
+import GravityMode from "@/components/GravityMode";
+
 
 const ParticleField = lazy(() => import("@/components/ParticleField"));
 
@@ -404,12 +409,22 @@ function Index() {
                   </a>
                 ))}
               </div>
-              <span className="label-mono">© {new Date().getFullYear()} aevill</span>
+              <button
+                type="button"
+                onClick={tapFooter}
+                title="…"
+                className="label-mono cursor-default select-none transition-colors hover:text-primary"
+                data-no-gravity
+              >
+                © {new Date().getFullYear()} aevill
+              </button>
             </div>
           </Reveal>
         </section>
       </div>
+      </ScrollVelocity>
     </div>
+
   );
 }
 
