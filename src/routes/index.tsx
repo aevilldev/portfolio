@@ -131,6 +131,8 @@ const LINKS = [
   { label: "DISCORD", href: "https://discord.com/users/aevill" },
 ];
 
+const LOGO_URL = `${import.meta.env.BASE_URL}logo.png`;
+
 export function Index() {
   const [introDone, setIntroDone] = useState(true);
   const [active, setActive] = useState<{ group: string; skill: Skill } | null>(null);
@@ -188,7 +190,13 @@ export function Index() {
       <div className="relative z-10">
 
         <header className="fixed top-0 right-0 left-0 z-20 flex items-center justify-between px-6 py-6 mix-blend-difference md:px-12">
-          <span className="text-display text-lg tracking-tight">aevill</span>
+          <a href="#" aria-label="aevill home" className="block">
+            <img
+              src={LOGO_URL}
+              alt="aevill"
+              className="h-10 w-24 object-contain object-left"
+            />
+          </a>
           <nav className="hidden gap-6 sm:flex">
             {[
               ["#skills", "Skills"],
