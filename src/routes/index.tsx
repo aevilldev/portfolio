@@ -131,7 +131,7 @@ const LINKS = [
   { label: "DISCORD", href: "https://discord.com/users/aevill" },
 ];
 
-function Index() {
+export function Index() {
   const [introDone, setIntroDone] = useState(true);
   const [active, setActive] = useState<{ group: string; skill: Skill } | null>(null);
   const [gravity, setGravity] = useState(false);
